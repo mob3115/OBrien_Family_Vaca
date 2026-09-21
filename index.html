@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>O'Brien Trips Over the Years</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;500;600;700&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.Default.css">
+<style>
+  :root{
+    --green:#164430; --green-2:#0f331f; --cream:#F3F1EF; --orange:#EE7331;
+    --midgreen:#086C43; --red:#CC1E4B; --aqua:#19B9A9; --blue:#1A8DA9; --pink:#C0629A;
+    --gray:#8C8577; --tan:#DBD5CA; --ink:#1B1B18; --white:#FFFFFF;
+    --shadow: 0 10px 30px -12px rgba(22,68,48,0.35);
+    --radius: 18px;
+    --sidebar-w: 292px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{background:var(--cream); color:var(--ink); font-family:'Source Sans 3', -apple-system, BlinkMacSystemFont, sans-serif; -webkit-font-smoothing:antialiased; overflow-x:hidden;}
+  h1,h2,h3,.display{font-family:'Poppins', sans-serif; font-weight:800; letter-spacing:-0.01em; margin:0;}
+  a{color:inherit;}
+  button{font-family:inherit;}
+  .eyebrow{font-family:'Poppins', sans-serif; font-weight:700; font-size:12px; letter-spacing:0.14em; text-transform:uppercase; opacity:0.85;}
+  .wrap{max-width:1280px; margin:0 auto; padding:0 20px;}
+
+  /* ---------- HERO ---------- */
+  .hero{position:relative; background:radial-gradient(circle at 85% -10%, #1c5a3c 0%, var(--green) 45%, var(--green-2) 100%); color:var(--cream); padding:30px 0 38px; overflow:hidden;}
+  .hero .wrap{position:relative; z-index:2;}
+  .dotfield{position:absolute; inset:0; z-index:1; opacity:0.55; pointer-events:none;}
+  .dotfield span{position:absolute; border-radius:3px; animation: float 7s ease-in-out infinite;}
+  @keyframes float{ 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
+  .brandmark{display:flex; align-items:center; gap:10px; margin-bottom:20px;}
+  .brandmark .word{font-family:'Poppins',sans-serif; font-weight:700; font-size:15px; letter-spacing:0.02em;}
+  .brandmark .word b{font-weight:800;}
+  .hero h1{font-size:clamp(26px, 3.6vw, 40px); line-height:1.1; max-width:20ch; margin-top:8px;}
+  .hero p.lede{font-size:15.5px; line-height:1.55; max-width:560px; margin-top:14px; color:#DCE9E1;}
+  .stat-row{display:flex; gap:26px; margin-top:22px; flex-wrap:wrap;}
+  .stat{min-width:90px;}
+  .stat .num{font-family:'Poppins',sans-serif; font-weight:800; font-size:24px; color:#fff;}
+  .stat .lab{font-size:11.5px; color:#B9CFC2; margin-top:2px;}
+
+  /* ---------- APP SHELL ---------- */
+  .app-shell{display:flex; align-items:flex-start; position:relative;}
+
+  .sidebar-toggle{
+    display:flex; align-items:center; gap:8px;
+    position:sticky; top:10px; z-index:50;
+    margin:14px 0 0 20px;
+    background:var(--green); color:#fff; border:none; padding:11px 16px; border-radius:100px;
+    font-weight:700; font-size:13.5px; cursor:pointer; box-shadow:var(--shadow);
+  }
+  @media(min-width:960px){ .sidebar-toggle{display:none;} }
+
+  .sidebar-backdrop{position:fixed; inset:0; background:rgba(15,30,22,0.45); z-index:2040; opacity:0; pointer-events:none; transition:opacity .25s ease;}
+  .sidebar-backdrop.show{opacity:1; pointer-events:auto;}
+  @media(min-width:960px){ .sidebar-backdrop{display:none;} }
+
+  .sidebar{
+    background:#fff;
+    width:min(84vw, 320px);
+    flex:0 0 auto;
+    position:fixed; top:0; left:0; height:100%; z-index:2041;
+    transform:translateX(-100%); transition:transform .3s cubic-bezier(.2,.8,.2,1);
+    box-shadow:20px 0 50px rgba(0,0,0,0.2);
+    overflow-y:auto; padding-bottom:30px;
+  }
+  .sidebar.open{transform:translateX(0);}
+  @media(min-width:960px){
+    .sidebar{
+      position:sticky; top:0; height:100vh; transform:none; box-shadow:none;
+      border-right:1px solid rgba(22,68,48,0.1); width:var(--sidebar-w); flex:0 0 var(--sidebar-w);
+    }
+    .sidebar-backdrop{display:none !important;}
+  }
+  .sidebar-head{display:flex; align-items:center; justify-content:space-between; padding:20px 20px 10px;}
+  .sidebar-head h2{font-size:17px; color:var(--green);}
+  .sidebar-close{width:32px; height:32px; border-radius:50%; border:none; background:#f1ece4; font-size:17px; cursor:pointer; color:var(--green);}
+  @media(min-width:960px){ .sidebar-close{display:none;} }
+
+  .filter-section{padding:14px 20px; border-bottom:1px solid #f1ece4;}
+  .filter-label{font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:var(--green); opacity:0.75; margin-bottom:10px;}
+  .pillar-list{display:flex; flex-direction:column; gap:6px;}
+  .pillar-opt{
+    display:flex; align-items:center; gap:10px; padding:8px 12px; border-radius:10px;
+    border:1.5px solid transparent; cursor:pointer; font-size:13.5px; font-weight:600; transition:all .15s ease;
+  }
+  .pillar-opt:hover{background:#faf7f2;}
+  .pillar-opt .dot{width:10px;height:10px;border-radius:50%; flex:0 0 auto;}
+  .pillar-opt .cnt{margin-left:auto; font-size:12px; color:var(--gray); font-weight:600;}
+  .pillar-opt.active{background:var(--type-color); color:#fff; border-color:var(--type-color);}
+  .pillar-opt.active .cnt{color:rgba(255,255,255,0.85);}
+  .pillar-opt.active .dot{background:#fff !important;}
+
+  select.fsel{
+    width:100%; padding:10px 12px; border-radius:10px; border:1.5px solid rgba(22,68,48,0.18);
+    background:#fff; font-size:13.5px; font-weight:600; color:var(--ink);
+  }
+  select.fsel + .fhint{font-size:11.5px; color:var(--gray); margin-top:7px; line-height:1.4;}
+  .legtoggle{display:flex; align-items:center; gap:9px; font-size:13px; font-weight:600; color:var(--green); cursor:pointer; padding:2px 0;}
+  .legtoggle input{accent-color:var(--green); width:15px; height:15px;}
+  .clearbtn{
+    width:100%; margin-top:12px; font-size:13px; font-weight:700; color:var(--red); background:none;
+    border:1.5px dashed rgba(204,30,75,0.35); border-radius:10px; cursor:pointer; padding:9px; display:none;
+  }
+  .clearbtn.show{display:block;}
+
+  /* ---------- CONTENT ---------- */
+  .content{flex:1; min-width:0;}
+  .toolbar{display:flex; align-items:center; justify-content:space-between; padding:16px 20px 0;}
+  .resultcount{font-size:12.5px; color:var(--gray); font-weight:600;}
+
+  main.wrap{padding:14px 20px 10px; max-width:none;}
+  .grid{display:grid; grid-template-columns:1fr; gap:22px;}
+  @media(min-width:1180px){ .grid{grid-template-columns: 1.5fr 1fr; align-items:start;} }
+  .panel{background:#fff; border-radius:var(--radius); box-shadow:var(--shadow); overflow:hidden;}
+  .map-panel{position:relative;}
+  .map-head{display:flex; justify-content:space-between; align-items:center; padding:16px 18px;}
+  .map-head h2{font-size:15px; color:var(--green);}
+  .map-head .hint{font-size:11.5px; color:var(--gray); font-weight:600;}
+  #leafletMap{width:100%; height:580px; background:#dbe7e2;}
+  .leaflet-popup, .leaflet-control-attribution{font-family:'Source Sans 3', sans-serif; font-size:11px;}
+  .cluster-dot{border-radius:50%; border:2px solid #fff; box-shadow:0 1px 4px rgba(0,0,0,0.35);}
+
+  /* ---------- LIST ---------- */
+  .list-panel{max-height:660px; overflow-y:auto;}
+  .list-head{padding:16px 18px 10px; border-bottom:1px solid #eee4da; position:sticky; top:0; background:#fff; z-index:2;}
+  .list-head h2{font-size:15px; color:var(--green);}
+  .cardlist{padding:6px 10px 14px;}
+  .yearmark{font-family:'Poppins',sans-serif; font-weight:800; font-size:12.5px; color:var(--green); opacity:0.55; padding:14px 10px 4px;}
+  .card{display:flex; gap:12px; align-items:flex-start; padding:12px 10px; border-radius:12px; cursor:pointer; transition:background .12s ease; border-bottom:1px solid #f1ece4;}
+  .card:hover, .card.hovered{background:#faf7f2;}
+  .card .swatch{width:11px;height:11px;border-radius:50%; margin-top:5px; flex:0 0 auto;}
+  .card .body{flex:1; min-width:0;}
+  .card .org{font-weight:700; font-size:14.5px; color:var(--ink); line-height:1.3;}
+  .card .grant{font-size:12.8px; color:var(--gray); margin-top:2px; line-height:1.35;}
+  .card .meta{font-size:11.5px; color:var(--green); opacity:0.8; margin-top:5px; font-weight:600;}
+  .card .chev{color:#cfc7ba; font-size:18px; margin-left:auto; flex:0 0 auto;}
+  .noresults{padding:40px 20px; text-align:center; color:var(--gray); font-size:14px;}
+
+  /* ---------- FOOTER ---------- */
+  footer{padding:30px 0 60px; text-align:center;}
+  footer .fineprint{font-size:12px; color:var(--gray); max-width:620px; margin:0 auto; line-height:1.5;}
+
+  /* ---------- DRAWER (right side) ---------- */
+  .backdrop{position:fixed; inset:0; background:rgba(15,30,22,0.45); z-index:2050; opacity:0; pointer-events:none; transition:opacity .25s ease;}
+  .backdrop.show{opacity:1; pointer-events:auto;}
+  .drawer{
+    position:fixed; top:0; right:0; height:100%; width:min(430px, 94vw);
+    background:var(--cream); z-index:2051; box-shadow:-20px 0 50px rgba(0,0,0,0.25);
+    transform:translateX(100%); transition:transform .3s cubic-bezier(.2,.8,.2,1);
+    overflow-y:auto;
+  }
+  .drawer.open{transform:translateX(0);}
+  .drawer-top{background:var(--drawer-color, var(--green)); color:#fff; padding:22px 22px 26px; position:relative;}
+  .drawer-close{position:absolute; top:16px; right:16px; width:34px; height:34px; border-radius:50%; background:rgba(255,255,255,0.18); border:none; color:#fff; font-size:18px; cursor:pointer; display:flex; align-items:center; justify-content:center;}
+  .drawer-close:hover{background:rgba(255,255,255,0.3);}
+  .drawer-tag{display:inline-flex; align-items:center; gap:6px; background:rgba(255,255,255,0.2); padding:5px 11px; border-radius:100px; font-size:11.5px; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:12px; margin-top:6px;}
+  .drawer-org{font-family:'Poppins',sans-serif; font-weight:800; font-size:21px; line-height:1.2;}
+  .drawer-grant{font-size:14px; margin-top:8px; opacity:0.92; line-height:1.4;}
+  .drawer-body{padding:22px;}
+  .drawer-row{display:flex; gap:10px; font-size:13.5px; color:var(--ink); margin-bottom:11px; align-items:flex-start;}
+  .drawer-row .k{color:var(--gray); min-width:92px; font-weight:600; flex:0 0 auto;}
+  .drawer-row .v{font-weight:600;}
+  .whoblock{margin-top:18px; padding:18px; border-radius:14px; background:#fff; box-shadow:var(--shadow);}
+  .whoblock .wh{font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:var(--green); opacity:0.75; margin-bottom:12px;}
+  .chips{display:flex; flex-wrap:wrap; gap:8px;}
+  .chip{display:inline-flex; align-items:center; gap:7px; background:#f4f1eb; border-radius:100px; padding:7px 13px 7px 9px; font-size:13px; font-weight:700; color:var(--ink);}
+  .chip .ini{width:22px;height:22px;border-radius:50%; background:var(--drawer-color, var(--green)); color:#fff; font-size:10.5px; display:flex; align-items:center; justify-content:center; font-family:'Poppins',sans-serif; font-weight:700;}
+  .chip.out{background:none; border:1.5px dashed #ddd5c8; color:#b5ada0; font-weight:600;}
+  .chip.out .ini{background:#e6e0d6; color:#b5ada0;}
+  .legblock{margin-top:16px; padding:16px 18px; border-radius:14px; background:#fff; box-shadow:var(--shadow);}
+  .legblock .wh{font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:var(--green); opacity:0.75; margin-bottom:10px;}
+  .leg{display:flex; gap:9px; align-items:center; font-size:13px; padding:6px 0; cursor:pointer; border-radius:8px;}
+  .leg:hover{background:#faf7f2;}
+  .leg .d{width:8px;height:8px;border-radius:50%; flex:0 0 auto;}
+  .leg.cur{font-weight:700;}
+  .addr{font-size:12px; color:var(--gray); line-height:1.5; margin-top:16px;}
+
+  .sr-only{position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0,0,0,0);}
+  @media (prefers-reduced-motion: reduce){ *{animation:none !important; transition:none !important;} }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="dotfield" id="dotfield"></div>
+  <div class="wrap">
+    <div class="brandmark">
+      <svg width="20" height="20" viewBox="0 0 20 20"><circle cx="10" cy="10" r="9" fill="none" stroke="#fff" stroke-width="1.6"/><path d="M10 3 v14 M3 10 h14" stroke="#fff" stroke-width="1.6"/></svg>
+      <span class="word">O'BRIEN <b>FAMILY</b></span>
+    </div>
+    <div class="eyebrow" style="color:#8FD9BE;">Vacation Map</div>
+    <h1>O'Brien Trips Over the Years</h1>
+    <p class="lede">Select by trip type or year and see all the places the O'Brien Family has been.</p>
+    <div class="stat-row">
+      <div class="stat"><div class="num" id="statDest">0</div><div class="lab">Destinations</div></div>
+      <div class="stat"><div class="num" id="statYears">0</div><div class="lab">Years travelled</div></div>
+      <div class="stat"><div class="num" id="statTypes">0</div><div class="lab">Kinds of trip</div></div>
+      <div class="stat"><div class="num" id="statMulti">0</div><div class="lab">Multi-stop trips</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="app-shell">
+
+  <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-head">
+      <h2>Filter the map</h2>
+      <button class="sidebar-close" id="sidebarClose" aria-label="Close filters">&times;</button>
+    </div>
+
+    <div class="filter-section">
+      <div class="filter-label">Trip Type <span style="text-transform:none; font-weight:600; opacity:0.7;">(pick any number)</span></div>
+      <div class="pillar-list" id="typeList"></div>
+    </div>
+
+    <div class="filter-section">
+      <div class="filter-label">Year</div>
+      <select class="fsel" id="yearSelect"></select>
+    </div>
+
+    <div class="filter-section">
+      <div class="filter-label">Who was along</div>
+      <select class="fsel" id="personSelect"></select>
+      <div class="fhint">Pick a person to see every destination they were on.</div>
+      <button class="clearbtn" id="clearBtn">Clear all filters</button>
+    </div>
+
+    <div class="filter-section" style="border-bottom:none;">
+      <label class="legtoggle"><input type="checkbox" id="legToggle" checked> Connect stops on the same trip</label>
+    </div>
+  </aside>
+
+  <div class="content">
+    <button class="sidebar-toggle" id="sidebarToggle">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/></svg>
+      Filters
+    </button>
+    <div class="toolbar">
+      <div></div>
+      <div class="resultcount" id="resultCount"></div>
+    </div>
+
+    <main class="wrap">
+      <div class="grid">
+        <div class="panel map-panel">
+          <div class="map-head"><h2>The map</h2><span class="hint">Click a dot for the details</span></div>
+          <div id="leafletMap"></div>
+        </div>
+
+        <div class="panel list-panel">
+          <div class="list-head"><h2>The destinations</h2></div>
+          <div class="cardlist" id="cardlist"></div>
+        </div>
+      </div>
+    </main>
+
+    <footer>
+      <div class="wrap">
+        <p class="fineprint">Pins are placed from the address on each row; a few are approximate where the original address pointed at a general area rather than an exact spot. Stops that share a Parent Trip are drawn as one connected trip.</p>
+      </div>
+    </footer>
+  </div>
+</div>
+
+<div class="backdrop" id="backdrop"></div>
+<div class="drawer" id="drawer" role="dialog" aria-modal="true" aria-label="Trip details"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.js"></script>
+<script>
+const TRIPS = [{"id": "t02", "year": 1987, "month": "", "desc": "Columbus Day Parade", "type": "Family Vaca", "parent": "", "address": "1 Capitol Sq, Columbus, OH 43215", "people": ["Dad", "Mom", "Kate", "Val"], "lat": 39.9612, "lng": -82.9988, "color": "#164430"}, {"id": "t03", "year": 1988, "month": "", "desc": "Sea World Opens in Cle", "type": "Local Trip", "parent": "", "address": "1100 Squires Rd, Aurora, OH 44202", "people": ["Dad", "Mom", "Kate", "Val"], "lat": 41.346, "lng": -81.369, "color": "#19B9A9"}, {"id": "t04", "year": 1989, "month": "", "desc": "Niagra Falls", "type": "Family Vaca", "parent": "", "address": "6650 Niagara River Pkwy, Niagara Falls, ON L2E 6T2, Canada", "people": ["Dad", "Mom", "Kate", "Val"], "lat": 43.08, "lng": -79.078, "color": "#164430"}, {"id": "t05", "year": 1991, "month": "", "desc": "Dad visits John Martin in Oregon", "type": "Dad Only", "parent": "", "address": "701 SW Broadway Ave., Portal, OR 97205", "people": ["Dad"], "lat": 45.5185, "lng": -122.681, "color": "#8C8577"}, {"id": "t06", "year": 1991, "month": "", "desc": "Canaan Valley State Park", "type": "Family Vaca", "parent": "", "address": "230 Main Lodge Rd, Davis, WV 26260", "people": ["Dad", "Mom", "Kate", "Val"], "lat": 39.054, "lng": -79.423, "color": "#164430"}, {"id": "t07", "year": 1993, "month": "", "desc": "Maume Bay", "type": "Local Trip", "parent": "", "address": "1400 State Park Rd, Oregon, OH 43616", "people": ["Dad", "Mom", "Kate", "Val", "Mark", "Lauren"], "lat": 41.687, "lng": -83.367, "color": "#19B9A9"}, {"id": "t08", "year": 1994, "month": "", "desc": "Niagara Falls", "type": "Family Vaca", "parent": "", "address": "6650 Niagara River Pkwy, Niagara Falls, ON L2E 6T2, Canada", "people": ["Dad", "Mom", "Kate", "Val", "Mark", "Lauren"], "lat": 43.08, "lng": -79.078, "color": "#164430"}, {"id": "t09", "year": 1994, "month": "", "desc": "Washington D.C.", "type": "Family Vaca", "parent": "Ocean City", "address": "2 Lincoln Memorial Cir NW, Washington, DC 20002", "people": ["Dad", "Mom", "Kate", "Val", "Mark", "Lauren"], "lat": 38.8893, "lng": -77.0502, "color": "#164430"}, {"id": "t10", "year": 1994, "month": "", "desc": "Ocean City, Maryland", "type": "Family Vaca", "parent": "Ocean City", "address": "Ocean City Beach, Ocean City, MD 21842", "people": ["Dad", "Mom", "Kate", "Val", "Mark", "Lauren"], "lat": 38.3365, "lng": -75.0849, "color": "#164430"}, {"id": "t11", "year": 1995, "month": "", "desc": "Wisconsin Dells", "type": "Family Vaca", "parent": "", "address": "1000 Chula Vista Pkwy, Wisconsin Dells, WI 53965", "people": ["Dad", "Mom", "Kate", "Val", "Mark", "Lauren"], "lat": 43.6528, "lng": -89.7462, "color": "#164430"}, {"id": "t12", "year": 1995, "month": "", "desc": "Niagara Falls", "type": "Family Vaca", "parent": "", "address": "6650 Niagara River Pkwy, Niagara Falls, ON L2E 6T2, Canada", "people": ["Dad", "Mom", "Kate", "Val", "Mark", "Lauren"], "lat": 43.08, "lng": -79.078, "color": "#164430"}, {"id": "t13", "year": 1996, "month": "", "desc": "Kingwood Gardens", "type": "Local Trip", "parent": "", "address": "50 N Trimble Rd, Mansfield, OH 44906", "people": ["Dad", "Mom", "Kate", "Val", "Mark", "Lauren"], "lat": 40.77, "lng": -82.558, "color": "#19B9A9"}, {"id": "t14", "year": 1996, "month": "", "desc": "All Girls Trip to Rochester, NY", "type": "Girls Trip", "parent": "", "address": "29 Kilbourn Rd, Rochester, NY 14618", "people": ["Mom", "Kate", "Val", "Lauren"], "lat": 43.133, "lng": -77.579, "color": "#C0629A"}, {"id": "t15", "year": 1996, "month": "", "desc": "Apple Valley with Haggertys", "type": "Local Trip", "parent": "", "address": "315 Ridgeway Dr, Howard, OH 43028", "people": ["Dad", "Mom", "Kate", "Val", "Mark", "Lauren"], "lat": 40.416, "lng": -82.376, "color": "#19B9A9"}, {"id": "t16", "year": 1997, "month": "", "desc": "Camping Trip to Mount Rushmore - Polynesian", "type": "Family Vaca", "parent": "Mount Rushmore", "address": "857 N Frontage Rd, Wisconsin Dells, WI 53965", "people": ["Dad", "Mom", "Kate", "Val", "Mark", "Lauren"], "lat": 43.629, "lng": -89.778, "color": "#164430"}, {"id": "t17", "year": 1997, "month": "", "desc": "Mount Rushmore", "type": "Family Vaca", "parent": "Mount Rushmore", "address": "13000 Highway 244, Keystone, SD 57751", "people": ["Dad", "Mom", "Kate", "Val", "Mark", "Lauren"], "lat": 43.8791, "lng": -103.4591, "color": "#164430"}, {"id": "t18", "year": 1997, "month": "", "desc": "Little House on the Prairie House", "type": "Family Vaca", "parent": "Mount Rushmore", "address": "2507 CR 3000 Rd, Independence, KS 67301. [1]", "people": ["Dad", "Mom", "Kate", "Val", "Mark", "Lauren"], "lat": 37.0958, "lng": -95.8258, "color": "#164430"}, {"id": "t19", "year": 1997, "month": "", "desc": "Hart Ranch", "type": "Family Vaca", "parent": "Mount Rushmore", "address": "23756 Arena Drive, Rapid City, South Dakota 57702", "people": ["Dad", "Mom", "Kate", "Val", "Mark", "Lauren"], "lat": 43.976, "lng": -103.147, "color": "#164430"}, {"id": "t20", "year": 1997, "month": "", "desc": "Salt Fork with Szczecinskis", "type": "Bonus Trip", "parent": "", "address": "14755 Cadiz Rd, Lore City, OH 43755", "people": ["Dad", "Mom", "Kate", "Val", "Mark", "Lauren"], "lat": 40.063, "lng": -81.49, "color": "#EE7331"}, {"id": "t21", "year": 1998, "month": "", "desc": "Hersey, PA", "type": "Family Vaca", "parent": "Phily", "address": "101 Chocolate World Wy, Hershey, PA 17033", "people": ["Dad", "Mom", "Kate", "Val", "Mark", "Lauren"], "lat": 40.287, "lng": -76.657, "color": "#164430"}, {"id": "t22", "year": 1998, "month": "", "desc": "Gettysburg, PA", "type": "Family Vaca", "parent": "Phily", "address": "401 Buford Ave. Gettysburg, PA 17325", "people": ["Dad", "Mom", "Kate", "Val", "Mark", "Lauren"], "lat": 39.833, "lng": -77.24, "color": "#164430"}, {"id": "t23", "year": 1998, "month": "", "desc": "Philadelphia, PA", "type": "Family Vaca", "parent": "Phily", "address": "520 Chestnut St, Philadelphia, PA 19106", "people": ["Dad", "Mom", "Kate", "Val", "Mark", "Lauren"], "lat": 39.9489, "lng": -75.15, "color": "#164430"}, {"id": "t24", "year": 1998, "month": "", "desc": "Late Summer to Rochester", "type": "Bonus Trip", "parent": "", "address": "29 Kilbourn Rd, Rochester, NY 14618", "people": ["Dad", "Mom", "Kate", "Val", "Mark", "Lauren"], "lat": 43.133, "lng": -77.579, "color": "#EE7331"}, {"id": "t25", "year": 1999, "month": "", "desc": "Washington DC", "type": "Family Vaca", "parent": "Williamsburg", "address": "2 Lincoln Memorial Cir NW, Washington, DC 20002", "people": ["Dad", "Mom", "Kate", "Val", "Mark", "Lauren"], "lat": 38.8893, "lng": -77.0502, "color": "#164430"}, {"id": "t26", "year": 1999, "month": "", "desc": "Williamsburg", "type": "Family Vaca", "parent": "Williamsburg", "address": "101 Visitor Center Dr, Williamsburg, VA 23185", "people": ["Dad", "Mom", "Kate", "Val", "Mark", "Lauren"], "lat": 37.276, "lng": -76.698, "color": "#164430"}, {"id": "t27", "year": 1999, "month": "", "desc": "Niagara Falls", "type": "Family Vaca", "parent": "Toronto", "address": "6650 Niagara River Pkwy, Niagara Falls, ON L2E 6T2, Canada", "people": ["Dad", "Mom", "Kate", "Val", "Mark", "Lauren"], "lat": 43.08, "lng": -79.078, "color": "#164430"}, {"id": "t28", "year": 1999, "month": "", "desc": "Toronto, Canada", "type": "Family Vaca", "parent": "Toronto", "address": "1 Austin Terrace, Toronto, ON M5R 1X8, Canada", "people": ["Dad", "Mom", "Kate", "Val", "Mark", "Lauren"], "lat": 43.678, "lng": -79.4094, "color": "#164430"}, {"id": "t29", "year": 1999, "month": "", "desc": "Right Team Sea World", "type": "Local Trip", "parent": "", "address": "1100 Squires Rd, Aurora, OH 44202", "people": ["Dad", "Mom", "Kate", "Val", "Mark", "Lauren"], "lat": 41.346, "lng": -81.369, "color": "#19B9A9"}, {"id": "t30", "year": 1999, "month": "", "desc": "Williamsburg Christmas", "type": "Holiday Trip", "parent": "99 Christmas", "address": "101 Visitor Center Dr, Williamsburg, VA 23185", "people": ["Dad", "Mom", "Kate", "Val", "Mark", "Lauren"], "lat": 37.276, "lng": -76.698, "color": "#CC1E4B"}, {"id": "t31", "year": 1999, "month": "", "desc": "Extended Family Holiday trip to Olglebay", "type": "Holiday Trip", "parent": "99 Christmas", "address": "465 Lodge Dr, Wheeling, WV 26003", "people": ["Dad", "Mom", "Kate", "Val", "Mark", "Lauren"], "lat": 40.0894, "lng": -80.6994, "color": "#CC1E4B"}, {"id": "t32", "year": 2000, "month": "", "desc": "Wilmington, NC to visit the Peveralls", "type": "Family Vaca", "parent": "", "address": "5427 Eastwind Rd, Wilmington, NC 28403", "people": ["Dad", "Mom", "Kate", "Val", "Mark", "Lauren"], "lat": 34.215, "lng": -77.872, "color": "#164430"}, {"id": "t33", "year": 2001, "month": "", "desc": "Extended Family Holiday trip to Ogelbay", "type": "Holiday Trip", "parent": "", "address": "465 Lodge Dr, Wheeling, WV 26003", "people": ["Dad", "Mom", "Kate", "Val", "Mark", "Lauren"], "lat": 40.0894, "lng": -80.6994, "color": "#CC1E4B"}, {"id": "t34", "year": 2001, "month": "", "desc": "Mark and Dad to California", "type": "Boys Trip", "parent": "", "address": "333 N College Way, Claremont, CA 91711", "people": ["Dad", "Mark"], "lat": 34.099, "lng": -117.712, "color": "#1A8DA9"}, {"id": "t35", "year": 2001, "month": "", "desc": "Family Vaca to NYC", "type": "Family Vaca", "parent": "NYC", "address": "1540 Broadway, New York, NY 10036", "people": ["Dad", "Mom", "Kate", "Val", "Mark", "Lauren"], "lat": 40.758, "lng": -73.9855, "color": "#164430"}, {"id": "t36", "year": 2001, "month": "", "desc": "Cooperstown and the Baseball Hall of Fame", "type": "Family Vaca", "parent": "NYC", "address": "25 Main St, Cooperstown, NY 13326", "people": ["Dad", "Mom", "Kate", "Val", "Mark", "Lauren"], "lat": 42.7, "lng": -74.924, "color": "#164430"}, {"id": "t37", "year": 2002, "month": "", "desc": "Boston, MA", "type": "Family Vaca", "parent": "Boston", "address": "19 N Square, Boston, MA 02113", "people": ["Dad", "Mom", "Kate", "Val", "Mark", "Lauren"], "lat": 42.3637, "lng": -71.0537, "color": "#164430"}, {"id": "t38", "year": 2002, "month": "", "desc": "Portland, Maine", "type": "Family Vaca", "parent": "Boston", "address": "109 Danforth St, Portland, ME 04101", "people": ["Dad", "Mom", "Kate", "Val", "Mark", "Lauren"], "lat": 43.652, "lng": -70.262, "color": "#164430"}, {"id": "t39", "year": 2002, "month": "", "desc": "Acadia, Maine", "type": "Family Vaca", "parent": "Boston", "address": "Mt Desert, ME 04660", "people": ["Dad", "Mom", "Kate", "Val", "Mark", "Lauren"], "lat": 44.3386, "lng": -68.2733, "color": "#164430"}, {"id": "t40", "year": 2003, "month": "", "desc": "Ocean City, Maryland", "type": "Family Vaca", "parent": "", "address": "Ocean City Beach, Ocean City, MD 21842", "people": ["Dad", "Mom", "Kate", "Val", "Mark", "Lauren"], "lat": 38.3365, "lng": -75.0849, "color": "#164430"}, {"id": "t41", "year": 2004, "month": "", "desc": "Mom and Val at Moody week.", "type": "Girls Trip", "parent": "", "address": "820 N La Salle Dr, Chicago, IL 60610", "people": ["Mom", "Val"], "lat": 41.898, "lng": -87.632, "color": "#C0629A"}, {"id": "t42", "year": 2005, "month": "", "desc": "Rahobath Beach, DE", "type": "Family Vaca", "parent": "", "address": "2 Olive Avenue & Boardwalk, 2 Olive Ave, Rehoboth Beach, DE 19971", "people": ["Dad", "Mom", "Kate", "Val", "Mark", "Lauren"], "lat": 38.718, "lng": -75.076, "color": "#164430"}, {"id": "t43", "year": 2007, "month": "", "desc": "The Great Smokey Mountains", "type": "Family Vaca", "parent": "", "address": "164 Old Mill Ave, Pigeon Forge, TN 37863", "people": ["Dad", "Mom", "Kate", "Val", "Mark", "Lauren"], "lat": 35.79, "lng": -83.554, "color": "#164430"}, {"id": "t44", "year": 2008, "month": "", "desc": "Rehoboth Beach, DE", "type": "Family Vaca", "parent": "", "address": "2 Olive Avenue & Boardwalk, 2 Olive Ave, Rehoboth Beach, DE 19971", "people": ["Dad", "Mom", "Kate", "Val", "Mark", "Lauren"], "lat": 38.718, "lng": -75.076, "color": "#164430"}, {"id": "t45", "year": 2008, "month": "", "desc": "Choir Tour in NYC with Lauren & Mom", "type": "Chior Tour", "parent": "", "address": "1540 Broadway, New York, NY 10036", "people": ["Mom", "Lauren"], "lat": 40.758, "lng": -73.9855, "color": "#B8860B"}, {"id": "t46", "year": 2008, "month": "", "desc": "Washington DC", "type": "Family Vaca", "parent": "", "address": "2 Lincoln Memorial Cir NW, Washington, DC 20002", "people": ["Dad", "Mom", "Kate", "Val", "Mark", "Lauren"], "lat": 38.8893, "lng": -77.0502, "color": "#164430"}, {"id": "t47", "year": 2009, "month": "", "desc": "Chicago to drop Val", "type": "College Trip", "parent": "", "address": "820 N La Salle Dr, Chicago, IL 60610", "people": ["Dad", "Mom", "Val", "Mark", "Lauren"], "lat": 41.898, "lng": -87.632, "color": "#086C43"}, {"id": "t48", "year": 2009, "month": "", "desc": "Vaca from Hadies (canoing, car broke down)", "type": "Family Vaca", "parent": "", "address": "374 OH-95, Loudonville, OH 44842", "people": ["Dad", "Mom", "Kate", "Val", "Mark", "Lauren"], "lat": 40.617, "lng": -82.275, "color": "#164430"}, {"id": "t49", "year": 2010, "month": "", "desc": "NC Vaca with Snyders", "type": "Family Vaca", "parent": "", "address": "23645 North Carolina Hwy 12, Rodanthe, NC 27968", "people": ["Dad", "Mom", "Kate", "Val", "Mark", "Lauren"], "lat": 35.594, "lng": -75.468, "color": "#164430"}, {"id": "t50", "year": 2010, "month": "", "desc": "NYC Senior Trip for Lauren", "type": "Senior Trip", "parent": "", "address": "1540 Broadway, New York, NY 10036", "people": ["Mom", "Lauren"], "lat": 40.758, "lng": -73.9855, "color": "#7A5EA8"}, {"id": "t51", "year": 2011, "month": "", "desc": "Hocking Hills Cabin", "type": "Family Vaca", "parent": "", "address": "19988 OH-664 Scenic, Logan, OH 43138", "people": ["Dad", "Mom", "Kate", "Val", "Mark", "Lauren"], "lat": 39.437, "lng": -82.539, "color": "#164430"}, {"id": "t52", "year": 2012, "month": "", "desc": "Nashville, TN", "type": "Family Vaca", "parent": "", "address": "101 2nd Ave. Nashville, TN 37201", "people": ["Dad", "Mom", "Kate", "Val", "Mark", "Lauren"], "lat": 36.162, "lng": -86.774, "color": "#164430"}, {"id": "t53", "year": 2015, "month": "", "desc": "Mark and Britt Get Married in Nashville", "type": "Marriage Trip", "parent": "", "address": "45 Lindsley Ave, Nashville, TN 37210", "people": ["Dad", "Mom", "Kate", "Val", "Mark", "Lauren", "Britt"], "lat": 36.159, "lng": -86.769, "color": "#D4356B"}, {"id": "t54", "year": 2016, "month": "", "desc": "Yosemite", "type": "Family Vaca", "parent": "", "address": "54411 US-395, Lee Vining, CA 93541", "people": ["Dad", "Mom", "Val", "Mark"], "lat": 37.9578, "lng": -119.119, "color": "#164430"}, {"id": "t55", "year": 2016, "month": "", "desc": "Thanksgiving Day Parade", "type": "Family Vaca", "parent": "", "address": "1540 Broadway, New York, NY 10036", "people": ["Dad", "Mom", "Kate", "Val", "Lauren"], "lat": 40.758, "lng": -73.9855, "color": "#164430"}, {"id": "t56", "year": 2017, "month": "", "desc": "Grand Canyon, AZ", "type": "Family Vaca", "parent": "", "address": "Desert View Watchtower, Grand Canyon Village, AZ 86023", "people": ["Dad", "Mom", "Val", "Mark"], "lat": 36.0439, "lng": -111.8266, "color": "#164430"}, {"id": "t57", "year": 2019, "month": "", "desc": "Poland", "type": "Val Tour Guide", "parent": "", "address": "Basztowa, 30-547 Kraków, Poland", "people": ["Dad", "Mom", "Val", "Lauren"], "lat": 50.065, "lng": 19.941, "color": "#2F6F8F"}, {"id": "t58", "year": 2021, "month": "", "desc": "First Lakeside Vaca", "type": "Family Vaca", "parent": "", "address": "320 Laurel Ave, Lakeside, OH 43440", "people": ["Dad", "Mom", "Kate", "Val", "Mark", "Lauren", "Britt", "Ryan"], "lat": 41.545, "lng": -82.753, "color": "#164430"}, {"id": "t59", "year": 2023, "month": "", "desc": "Ireland Trip", "type": "Val Tour Guide", "parent": "", "address": "Merrion Square W, Dublin 2, D02 K303, Ireland", "people": ["Dad", "Mom", "Val", "Lauren"], "lat": 53.3395, "lng": -6.251, "color": "#2F6F8F"}];
+
+const ALL_PEOPLE = ['Dad','Mom','Kate','Val','Mark','Lauren','Britt','Ryan'];
+
+let map, clusterGroup, legLayer;
+const markerById = {};
+const state = { types:new Set(), year:'all', person:'all', legs:true };
+
+/* ---------------- helpers ---------------- */
+function typeCounts(){
+  const c = {};
+  TRIPS.forEach(t=> c[t.type] = (c[t.type]||0)+1 );
+  return c;
+}
+function typeColor(type){
+  const t = TRIPS.find(x=>x.type===type);
+  return t ? t.color : '#8C8577';
+}
+function esc(s){ return String(s).replace(/[&<>"]/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m])); }
+
+function filtered(){
+  return TRIPS.filter(t=>{
+    if(state.types.size && !state.types.has(t.type)) return false;
+    if(state.year !== 'all' && String(t.year) !== state.year) return false;
+    if(state.person !== 'all' && !t.people.includes(state.person)) return false;
+    return true;
+  });
+}
+
+/* ---------------- hero ---------------- */
+function buildHero(){
+  const df = document.getElementById('dotfield');
+  const colors = ['#EE7331','#19B9A9','#C0629A','#1A8DA9','#8FD9BE'];
+  for(let i=0;i<26;i++){
+    const s = document.createElement('span');
+    const sz = 4 + Math.random()*8;
+    s.style.width = sz+'px'; s.style.height = sz+'px';
+    s.style.left = Math.random()*100+'%'; s.style.top = Math.random()*100+'%';
+    s.style.background = colors[i%colors.length];
+    s.style.opacity = 0.25 + Math.random()*0.35;
+    s.style.animationDelay = (Math.random()*7)+'s';
+    df.appendChild(s);
+  }
+  document.getElementById('statDest').textContent = TRIPS.length;
+  document.getElementById('statYears').textContent = new Set(TRIPS.map(t=>t.year)).size;
+  document.getElementById('statTypes').textContent = new Set(TRIPS.map(t=>t.type)).size;
+  document.getElementById('statMulti').textContent = new Set(TRIPS.filter(t=>t.parent).map(t=>t.parent)).size;
+}
+
+/* ---------------- filters ---------------- */
+function buildFilters(){
+  const counts = typeCounts();
+  const types = Object.keys(counts).sort((a,b)=> counts[b]-counts[a] || a.localeCompare(b));
+  const list = document.getElementById('typeList');
+  types.forEach(type=>{
+    const el = document.createElement('div');
+    el.className = 'pillar-opt';
+    el.style.setProperty('--type-color', typeColor(type));
+    el.innerHTML = `<span class="dot" style="background:${typeColor(type)}"></span><span>${esc(type)}</span><span class="cnt">${counts[type]}</span>`;
+    el.addEventListener('click', ()=>{
+      if(state.types.has(type)) state.types.delete(type); else state.types.add(type);
+      el.classList.toggle('active');
+      applyFilters();
+    });
+    list.appendChild(el);
+  });
+
+  const ySel = document.getElementById('yearSelect');
+  const years = [...new Set(TRIPS.map(t=>t.year))].sort((a,b)=>a-b);
+  ySel.innerHTML = '<option value="all">All years (' + years[0] + '\u2013' + years[years.length-1] + ')</option>' +
+    years.map(y=>`<option value="${y}">${y}</option>`).join('');
+  ySel.addEventListener('change', e=>{ state.year = e.target.value; applyFilters(); });
+
+  const pSel = document.getElementById('personSelect');
+  pSel.innerHTML = '<option value="all">Everyone</option>' +
+    ALL_PEOPLE.map(p=>{
+      const n = TRIPS.filter(t=>t.people.includes(p)).length;
+      return `<option value="${esc(p)}">${esc(p)} (${n})</option>`;
+    }).join('');
+  pSel.addEventListener('change', e=>{ state.person = e.target.value; applyFilters(); });
+
+  document.getElementById('legToggle').addEventListener('change', e=>{
+    state.legs = e.target.checked; drawLegs();
+  });
+
+  document.getElementById('clearBtn').addEventListener('click', ()=>{
+    state.types.clear(); state.year='all'; state.person='all';
+    document.querySelectorAll('.pillar-opt').forEach(el=>el.classList.remove('active'));
+    ySel.value='all'; pSel.value='all';
+    applyFilters();
+  });
+}
+
+/* ---------------- map ---------------- */
+function dotIcon(color){
+  return L.divIcon({
+    html:`<div class="cluster-dot" style="width:16px;height:16px;background:${color};"></div>`,
+    className:'', iconSize:[16,16], iconAnchor:[8,8]
+  });
+}
+
+function initMap(){
+  map = L.map('leafletMap', { scrollWheelZoom:true, minZoom:2, worldCopyJump:true });
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom:19,
+    attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+  }).addTo(map);
+
+  legLayer = L.layerGroup().addTo(map);
+
+  clusterGroup = L.markerClusterGroup({
+    maxClusterRadius:34,
+    spiderfyOnMaxZoom:true,
+    showCoverageOnHover:false,
+    iconCreateFunction: function(cluster){
+      const count = cluster.getChildCount();
+      const size = count>20?44:count>8?38:32;
+      return L.divIcon({
+        html:`<div style="width:${size}px;height:${size}px;border-radius:50%;background:#164430;color:#fff;display:flex;align-items:center;justify-content:center;font-family:'Poppins',sans-serif;font-weight:700;font-size:13px;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,0.35);">${count}</div>`,
+        className:'', iconSize:[size,size]
+      });
+    }
+  });
+  map.addLayer(clusterGroup);
+
+  TRIPS.forEach(t=>{
+    const marker = L.marker([t.lat, t.lng], { icon: dotIcon(t.color), title: t.desc });
+    marker.on('click', ()=> openDrawer(t));
+    markerById[t.id] = marker;
+  });
+
+  map.fitBounds(L.latLngBounds(TRIPS.map(t=>[t.lat,t.lng])), { padding:[30,30] });
+  refreshMarkers();
+}
+
+function refreshMarkers(){
+  clusterGroup.clearLayers();
+  filtered().forEach(t=> clusterGroup.addLayer(markerById[t.id]) );
+  drawLegs();
+}
+
+function drawLegs(){
+  legLayer.clearLayers();
+  if(!state.legs) return;
+  const groups = {};
+  filtered().forEach(t=>{
+    if(!t.parent) return;
+    const key = t.parent + '|' + t.year;
+    (groups[key] = groups[key] || []).push(t);
+  });
+  Object.values(groups).forEach(g=>{
+    if(g.length < 2) return;
+    L.polyline(g.map(t=>[t.lat,t.lng]), {
+      color:g[0].color, weight:2.5, opacity:0.6, dashArray:'6 6'
+    }).addTo(legLayer);
+  });
+}
+
+/* ---------------- list ---------------- */
+function refreshList(){
+  const list = filtered().slice().sort((a,b)=> a.year-b.year || a.id.localeCompare(b.id));
+  const box = document.getElementById('cardlist');
+  document.getElementById('resultCount').textContent =
+    list.length + (list.length===1 ? ' destination' : ' destinations') + ' shown';
+  document.getElementById('clearBtn').classList.toggle('show',
+    state.types.size>0 || state.year!=='all' || state.person!=='all');
+
+  if(!list.length){
+    box.innerHTML = '<div class="noresults">No trips match those filters. Try clearing one.</div>';
+    return;
+  }
+  let html = '', lastYear = null;
+  list.forEach(t=>{
+    if(t.year !== lastYear){ html += `<div class="yearmark">${t.year}</div>`; lastYear = t.year; }
+    html += `<div class="card" data-id="${t.id}">
+      <span class="swatch" style="background:${t.color}"></span>
+      <div class="body">
+        <div class="org">${esc(t.desc)}</div>
+        <div class="grant">${esc(t.address)}</div>
+        <div class="meta">${esc(t.type)}${t.parent ? ' &middot; part of ' + esc(t.parent) : ''} &middot; ${t.people.length} travelling</div>
+      </div>
+      <span class="chev">&rsaquo;</span>
+    </div>`;
+  });
+  box.innerHTML = html;
+  box.querySelectorAll('.card').forEach(card=>{
+    const t = TRIPS.find(x=>x.id===card.dataset.id);
+    card.addEventListener('click', ()=>{ focusTrip(t); openDrawer(t); });
+  });
+}
+
+function focusTrip(t){
+  map.setView([t.lat,t.lng], Math.max(map.getZoom(), 7), { animate:true });
+}
+
+/* ---------------- drawer ---------------- */
+function openDrawer(t){
+  const siblings = t.parent ? TRIPS.filter(x=>x.parent===t.parent && x.year===t.year) : [];
+  const chips = ALL_PEOPLE.map(p=>{
+    const on = t.people.includes(p);
+    return `<span class="chip${on?'':' out'}"><span class="ini">${esc(p[0])}</span>${esc(p)}</span>`;
+  }).join('');
+
+  const legHtml = siblings.length>1 ? `
+    <div class="legblock">
+      <div class="wh">Other stops on the ${esc(t.parent)} trip</div>
+      ${siblings.map(s=>`<div class="leg${s.id===t.id?' cur':''}" data-id="${s.id}">
+          <span class="d" style="background:${s.color}"></span>${esc(s.desc)}${s.id===t.id?' (you are here)':''}
+        </div>`).join('')}
+    </div>` : '';
+
+  const d = document.getElementById('drawer');
+  d.style.setProperty('--drawer-color', t.color);
+  d.innerHTML = `
+    <div class="drawer-top">
+      <button class="drawer-close" id="drawerClose" aria-label="Close">&times;</button>
+      <div class="drawer-tag">${esc(t.type)}</div>
+      <div class="drawer-org">${esc(t.desc)}</div>
+      <div class="drawer-grant">${t.year}</div>
+    </div>
+    <div class="drawer-body">
+      <div class="drawer-row"><span class="k">Year</span><span class="v">${t.year}${t.month ? ' &middot; ' + esc(t.month) : ''}</span></div>
+      <div class="drawer-row"><span class="k">Trip type</span><span class="v">${esc(t.type)}</span></div>
+      <div class="drawer-row"><span class="k">Parent trip</span><span class="v">${t.parent ? esc(t.parent) : 'Standalone stop'}</span></div>
+
+      <div class="whoblock">
+        <div class="wh">Who was on this trip (${t.people.length} of ${ALL_PEOPLE.length})</div>
+        <div class="chips">${chips}</div>
+      </div>
+
+      ${legHtml}
+
+      <div class="addr">${esc(t.address)}</div>
+    </div>`;
+
+  d.querySelector('#drawerClose').addEventListener('click', closeDrawer);
+  d.querySelectorAll('.leg').forEach(el=>{
+    el.addEventListener('click', ()=>{
+      const s = TRIPS.find(x=>x.id===el.dataset.id);
+      if(s && s.id!==t.id){ focusTrip(s); openDrawer(s); }
+    });
+  });
+
+  d.classList.add('open');
+  document.getElementById('backdrop').classList.add('show');
+}
+function closeDrawer(){
+  document.getElementById('drawer').classList.remove('open');
+  document.getElementById('backdrop').classList.remove('show');
+}
+
+/* ---------------- wiring ---------------- */
+function applyFilters(){ refreshMarkers(); refreshList(); }
+
+document.getElementById('backdrop').addEventListener('click', closeDrawer);
+document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeDrawer(); });
+
+const sidebar = document.getElementById('sidebar');
+const sbBackdrop = document.getElementById('sidebarBackdrop');
+document.getElementById('sidebarToggle').addEventListener('click', ()=>{
+  sidebar.classList.add('open'); sbBackdrop.classList.add('show');
+});
+function closeSidebar(){ sidebar.classList.remove('open'); sbBackdrop.classList.remove('show'); }
+document.getElementById('sidebarClose').addEventListener('click', closeSidebar);
+sbBackdrop.addEventListener('click', closeSidebar);
+
+buildHero();
+buildFilters();
+initMap();
+refreshList();
+</script>
+</body>
+</html>
